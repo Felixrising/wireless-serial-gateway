@@ -18,20 +18,36 @@ $(document).ready(function () {
   window.onresize = updateUI;
   $('.mrdiy_divider').css("background-color", "#32C5FF");
   
-  $('#console_input').keypress(function(event){
-    var keycode = (event.keyCode ? event.keyCode : event.which);
-    if(keycode == '13'){
-        sendOverSocket("{'action':'console','content':'" + $("#console_input").val() + "'}" );
-        $('#console_input').val("");
-     }
-  });
+$('#console_input').keypress(function(event){
+  var keycode = (event.keyCode ? event.keyCode : event.which);
+  if(keycode == '13'){
+      var command = $("#console_input").val();
+      sendOverSocket("{'action':'console','content':'" + command + "'}" );
+      if($("#echoCheckbox").is(":checked")){
+    var timeStr = getFormattedTimestamp();
+    $('#console_output').append("[" + timeStr + "] S: " + command + '\n');
+    $('#console_output').scrollTop($('#console_output')[0].scrollHeight);
+}
+
+      $('#console_input').val("");
+  }
+});
+
   
-  $('#console_input_send_button').click(function(event){
-    if($("#console_input").val() != ""){
-      sendOverSocket("{'action':'console','content':'" + $("#console_input").val() + "'}" );
-      $('#console_input').val(""); 
-    }
-  });
+$('#console_input_send_button').click(function(event){
+  var command = $("#console_input").val();
+  if(command != ""){
+    sendOverSocket("{'action':'console','content':'" + command + "'}" );
+    if($("#echoCheckbox").is(":checked")){
+    var timeStr = getFormattedTimestamp();
+    $('#console_output').append("[" + timeStr + "] S: " + command + '\n');
+    $('#console_output').scrollTop($('#console_output')[0].scrollHeight);
+}
+
+    $('#console_input').val(""); 
+  }
+});
+
   
   // Hide RX/TX dropdowns if hardware interface selected
   $("#interface").change(function() {
@@ -46,6 +62,16 @@ $(document).ready(function () {
   
   connectToSocket();
 });
+
+function getFormattedTimestamp() {
+  var now = new Date();
+  var hh = now.getHours().toString().padStart(2, '0');
+  var mm = now.getMinutes().toString().padStart(2, '0');
+  var ss = now.getSeconds().toString().padStart(2, '0');
+  var fff = now.getMilliseconds().toString().padStart(3, '0');
+  return hh + ":" + mm + ":" + ss + ":" + fff;
+}
+
 
 function changeBaudAndPins(){
   const xhttp = new XMLHttpRequest();
@@ -85,18 +111,19 @@ function connectToSocket(){
     $('.mrdiy_divider').css("background-color", "#32C5FF");
     sendOverSocket("{'action':'command', 'content':101}");
   };
-  socket.onmessage = function(event) {
-    try {
-      var jsonObject = JSON.parse(event.data);
-    } catch(e) {
-      return;
-    }
-    var data_type = jsonObject.type;
-    if(data_type == "console"){
-      $('#console_output').append(jsonObject.content);
-      $('#console_output').append('\n');
-      $('#console_output').scrollTop($('#console_output')[0].scrollHeight);
-    } else if(data_type == "info"){
+socket.onmessage = function(event) {
+  try {
+    var jsonObject = JSON.parse(event.data);
+  } catch(e) {
+    return;
+  }
+  var data_type = jsonObject.type;
+  if(data_type == "console"){
+    var timeStr = getFormattedTimestamp();  // Use custom timestamp
+    var formattedMessage = "[" + timeStr + "] R: " + jsonObject.content;
+    $('#console_output').append(formattedMessage + '\n');
+    $('#console_output').scrollTop($('#console_output')[0].scrollHeight);
+  } else if(data_type == "info"){
       $('#info_baud').html(jsonObject.baud);
       $("#baud").prepend("<option value='"+jsonObject.baud +"' selected='selected'>"+jsonObject.baud +"</option>");
     } else if(data_type == "error"){
@@ -177,33 +204,30 @@ char html_template[] PROGMEM = R"=====(
   </div>
 
   <div class="me-2">
-    <label for="rxPin">RX Pin:</label><br/>
-    <select class="me-2" onchange="changeBaudAndPins()" id="rxPin" name="rx">
-      <option value="16">D0 (GPIO16)</option>
-      <option value="5">D1 (GPIO5)</option>
-      <option value="4">D2 (GPIO4)</option>
-      <option value="0">D3 (GPIO0)</option>
-      <option value="2">D4 (GPIO2)</option>
-      <option value="14">D5 (GPIO14)</option>
-      <option value="12" selected>D6 (GPIO12)</option>
-      <option value="13">D7 (GPIO13)</option>
-      <option value="15">D8 (GPIO15)</option>
-    </select>
+<label for="rxPin">RX Pin:</label><br/>
+<select class="me-2" onchange="changeBaudAndPins()" id="rxPin" name="rx">
+  <option value="5">D1 (GPIO5)</option>
+  <option value="4">D2 (GPIO4)</option>
+  <option value="14">D5 (GPIO14)</option>
+  <option value="12" selected>D6 (GPIO12)</option>
+  <option value="13">D7 (GPIO13)</option>
+</select>
+
   </div>
 
   <div class="me-2">
-    <label for="txPin">TX Pin:</label><br/>
-    <select class="me-2" onchange="changeBaudAndPins()" id="txPin" name="tx">
-      <option value="16">D0 (GPIO16)</option>
-      <option value="5">D1 (GPIO5)</option>
-      <option value="4">D2 (GPIO4)</option>
-      <option value="0">D3 (GPIO0)</option>
-      <option value="2">D4 (GPIO2)</option>
-      <option value="14" selected>D5 (GPIO14)</option>
-      <option value="12">D6 (GPIO12)</option>
-      <option value="13">D7 (GPIO13)</option>
-      <option value="15">D8 (GPIO15)</option>
-    </select>
+<label for="txPin">TX Pin:</label><br/>
+<select class="me-2" onchange="changeBaudAndPins()" id="txPin" name="tx">
+  <option value="5">D1 (GPIO5)</option>
+  <option value="4">D2 (GPIO4)</option>
+  <option value="0">D3 (GPIO0)</option>
+  <option value="2">D4 (GPIO2)</option>
+  <option value="14" selected>D5 (GPIO14)</option>
+  <option value="12">D6 (GPIO12)</option>
+  <option value="13">D7 (GPIO13)</option>
+  <option value="15">D8 (GPIO15)</option>
+</select>
+
   </div>
 </div>
 
@@ -213,7 +237,12 @@ char html_template[] PROGMEM = R"=====(
     <div class="p-2 flex-grow-1">
       <textarea class="h-100 text-secondary form-control h-90 flex-grow-1" id="console_output" rows="3"></textarea>
     </div>
-    
+    <div class="mb-2">
+  <label>
+    <input type="checkbox" id="echoCheckbox"> Echo commands
+  </label>
+  <button id="saveConsoleBtn" class="btn btn-secondary">Save Console</button>
+</div>
     <!-- Console input area -->
     <div class="mt-auto m-2">
       <div class="row">
