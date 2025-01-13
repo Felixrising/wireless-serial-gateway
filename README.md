@@ -11,9 +11,9 @@ and software serial and mDNS advertisement.
 Features:
 ---------
 - Serial Communication Interface Selection:
-  * Choose between the default Hardware Serial (UART0) and SoftwareSerial.
-  * For SoftwareSerial, select RX/TX pins from available GPIOs.
-  * Prevents setting the same GPIO for both RX and TX.
+  * Choose between the default Hardware Serial (UART0) and SoftwareSerial. [NEW]
+  * For SoftwareSerial, select RX/TX pins from available GPIOs. [NEW]
+  * Prevents setting the same GPIO for both RX and TX. [BORING!]
 
 - Web-based Console Interface:
   * Type commands and view serial output directly in your web browser.
@@ -44,7 +44,7 @@ Software:
 Setup and Installation:
 -----------------------
 1. Clone the repository:
-   git clone https://github.com/yourusername/your-repo-name.git
+   git clone [https://github.com/yourusername/your-repo-name.git]https://github.com/Felixrising/wireless-serial-gateway.git
 
 2. Open the Project:
    - Open "wifi_serial.ino" in the Arduino IDE or PlatformIO.
