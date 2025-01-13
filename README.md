@@ -44,7 +44,7 @@ Software:
 Setup and Installation:
 -----------------------
 1. Clone the repository:
-   git clone [https://github.com/yourusername/your-repo-name.git]https://github.com/Felixrising/wireless-serial-gateway.git
+   git clone https://github.com/Felixrising/wireless-serial-gateway.git
 
 2. Open the Project:
    - Open "wifi_serial.ino" in the Arduino IDE or PlatformIO.
