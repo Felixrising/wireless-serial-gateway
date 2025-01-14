@@ -334,7 +334,4 @@ char html_template[] PROGMEM = R"=====(
 </body>
 </html>
 
-
-
-
 )=====";
