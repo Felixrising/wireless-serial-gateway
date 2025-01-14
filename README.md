@@ -59,6 +59,30 @@ Setup and Installation:
    - Upon startup, the firmware attempts to connect to a configured Wi-Fi network.
    - If Wi-Fi credentials are not set, it will start in AP mode for initial configuration.
 
+6. RX/TX Pin selection:
+    - Safe TX and RX Pins for Wemos D1 Mini Boards/Clones
+
+When using the Wemos D1 Mini boards or their clones, not all pins are equally suitable for TX and RX due to specific hardware constraints during boot. Below is a detailed list of which pins are safe to use for TX and RX, along with important notes.
+
+    - Pin Safety Table
+
++-------+--------+--------------------+-------------------------------+
+| Label | GPIO   | Safe for TX?       | Safe for RX?                  |
++-------+--------+--------------------+-------------------------------+
+| D1    | GPIO5  | Yes                | Yes                           |
+| D2    | GPIO4  | Yes                | Yes                           |
+| D5    | GPIO14 | Yes                | Yes                           |
+| D6    | GPIO12 | Yes                | Yes                           |
+| D7    | GPIO13 | Yes                | Yes                           |
+| RX    | GPIO3  | Yes                | Yes                           |
+| TX    | GPIO1  | Yes                | Yes                           |
+| D3    | GPIO0  | Yes (pulled up)    | No (boot fails if pulled LOW) |
+| D4    | GPIO2  | Yes (pulled up)    | No (boot fails if pulled LOW) |
+| D8    | GPIO15 | Yes (pulled down)  | No (boot fails if pulled HIGH)|
+| D0    | GPIO16 | No (special use)   | No (special use)              |
++-------+--------+--------------------+-------------------------------+
+NB: The Rx/Tx pin selection restricted to safe to use pins only, TX and RX pins (GPIO1 and GPIO3) are reserved for Hardware Serial.
+
 Using the Web Interface:
 ------------------------
 1. Access the Web Interface:
