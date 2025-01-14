@@ -25,6 +25,7 @@ extern const char js_main[];
 extern const char css_main[];
 
 int cacheDuration = 300; // 5 minutes in seconds during development
+//int cacheDuration = 604800; // 7 days in seconds for full release
 
 ESP8266WebServer server(80);
 WiFiClient wifiClient;
