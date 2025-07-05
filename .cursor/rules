@@ -1,0 +1,26 @@
+**XIAO ESP32-S3 upload cheat-sheet**
+
+* Board has **no USB-to-UART bridge**, so esptool can’t wiggle DTR/RTS; only the chip’s native USB-CDC port is available. ([docs.platformio.org][1])
+
+* hold **BOOT**, tap **RESET** to enter ROM loader, then upload.
+* Once a first image is on the chip you can avoid buttons entirely by using **OTA** or leaving the board in ROM loader during rapid iterations. ([wiki.seeedstudio.com][6])
+
+* To use OTA, switch platformio.ini to use upload_protocol = espota with upload_port = <IP address of the ESP>
+
+;upload_protocol = espota ; use this for OTA updates once stable wifi functionality is in place.
+;upload_port = 10.1.0.201 ; use this for OTA updates once stable wifi functionality is in place.
+
+** XAIO ESP#@-S3 Serial Port caveats**
+
+* Serial initialisation requires a small delay in setup() to allow the native USB-CDC port to settle. 
+
+ e.g.:
+    delay(1000);
+    Serial.begin(460800);
+
+* Also note use monitor_speed = 460800
+
+* need to enable CDC On Boot for Serial to be mapped to the USB port
+
+	-D ARDUINO_USB_MODE=1
+	-D ARDUINO_USB_CDC_ON_BOOT=1

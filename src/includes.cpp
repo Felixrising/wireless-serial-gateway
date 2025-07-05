@@ -22,6 +22,7 @@ $(document).ready(function () {
   updateUI();
   window.onresize = updateUI;
   $('.mrdiy_divider').css("background-color", "#32C5FF");
+  populatePinOptions(); // Populate pin options based on board type
   
   // Initialize echo checkbox and save button
   $('#echoCheckbox').prop('checked', false); // Default: echo disabled
@@ -78,9 +79,9 @@ $(document).ready(function () {
     }
   });
 
-  // Grey out (disable) RX/TX dropdowns when Hardware Serial is selected
+  // Grey out (disable) RX/TX dropdowns when USB Serial is selected
   $("#interface").change(function() {
-    if(this.value === "hw"){
+    if(this.value === "usb"){
       $("#rxPin, #txPin").prop("disabled", true);
     } else {
       $("#rxPin, #txPin").prop("disabled", false);
@@ -136,21 +137,118 @@ function getFormattedTimestamp() {
   return hh + ":" + mm + ":" + ss + ":" + fff;
 }
 
+// Function to populate pin options based on board type
+function populatePinOptions() {
+  // This will be populated by the server with board-specific pins
+  // For now, we'll use a default set that works for both platforms
+  var rxPinSelect = document.getElementById("rxPin");
+  var txPinSelect = document.getElementById("txPin");
+  
+  // Clear existing options
+  rxPinSelect.innerHTML = "";
+  txPinSelect.innerHTML = "";
+  
+  // Get board info from server
+  fetch('/boardinfo')
+    .then(response => response.json())
+    .then(data => {
+      if (data.board_type === "ESP32-S3") {
+        // Update interface dropdown for ESP32
+        var interfaceSelect = document.getElementById("interface");
+        interfaceSelect.innerHTML = "";
+        interfaceSelect.add(new Option("USB Serial", "usb", true));
+        interfaceSelect.add(new Option("Hardware Serial", "hw"));
+        
+        // ESP32 S3 Xiao pins
+        var esp32Pins = [
+          {value: "2", text: "A0 (GPIO2)"},
+          {value: "3", text: "A1 (GPIO3)"},
+          {value: "4", text: "A2 (GPIO4)"},
+          {value: "5", text: "A3 (GPIO5)"},
+          {value: "6", text: "A4 (GPIO6)"},
+          {value: "7", text: "A5 (GPIO7)"},
+          {value: "8", text: "A6 (GPIO8)"},
+          {value: "9", text: "A7 (GPIO9)"},
+          {value: "10", text: "A8 (GPIO10)"},
+          {value: "1", text: "D0 (GPIO1)"},
+          {value: "42", text: "D1 (GPIO42)"},
+          {value: "41", text: "D2 (GPIO41)"},
+          {value: "40", text: "D3 (GPIO40)"},
+          {value: "39", text: "D4 (GPIO39)"},
+          {value: "38", text: "D5 (GPIO38)"},
+          {value: "37", text: "D6 (GPIO37)"},
+          {value: "36", text: "D7 (GPIO36)"},
+          {value: "35", text: "D8 (GPIO35)"},
+          {value: "0", text: "D9 (GPIO0)"},
+          {value: "43", text: "D10 (GPIO43)"},
+          {value: "44", text: "SDA (GPIO44)"},
+          {value: "45", text: "SCL (GPIO45)"}
+        ];
+        populateSelectOptions(rxPinSelect, esp32Pins, "43");
+        populateSelectOptions(txPinSelect, esp32Pins, "44");
+      } else {
+        // Update interface dropdown for ESP8266
+        var interfaceSelect = document.getElementById("interface");
+        interfaceSelect.innerHTML = "";
+        interfaceSelect.add(new Option("Hardware Serial", "hw", true));
+        interfaceSelect.add(new Option("SoftwareSerial", "sw"));
+        
+        // ESP8266 D1 Mini pins
+        var esp8266Pins = [
+          {value: "5", text: "D1 (GPIO5)"},
+          {value: "4", text: "D2 (GPIO4)"},
+          {value: "0", text: "D3 (GPIO0)"},
+          {value: "2", text: "D4 (GPIO2)"},
+          {value: "14", text: "D5 (GPIO14)"},
+          {value: "12", text: "D6 (GPIO12)"},
+          {value: "13", text: "D7 (GPIO13)"},
+          {value: "15", text: "D8 (GPIO15)"}
+        ];
+        populateSelectOptions(rxPinSelect, esp8266Pins, "12");
+        populateSelectOptions(txPinSelect, esp8266Pins, "14");
+      }
+    })
+    .catch(error => {
+      console.log('Board info not available, using default pins');
+      // Default fallback pins
+      var defaultPins = [
+        {value: "12", text: "Pin 12"},
+        {value: "14", text: "Pin 14"}
+      ];
+      populateSelectOptions(rxPinSelect, defaultPins, "12");
+      populateSelectOptions(txPinSelect, defaultPins, "14");
+    });
+}
+
+function populateSelectOptions(selectElement, options, defaultValue) {
+  options.forEach(function(option) {
+    var opt = document.createElement("option");
+    opt.value = option.value;
+    opt.text = option.text;
+    if (option.value === defaultValue) {
+      opt.selected = true;
+    }
+    selectElement.appendChild(opt);
+  });
+}
+
 function changeBaudAndPins(){
   const xhttp = new XMLHttpRequest();
   const baud = document.getElementById("baud").value;
   const interfaceType = document.getElementById("interface").value;
   let url = "/update?baud=" + baud + "&interface=" + interfaceType;
 
-  if(interfaceType === "sw") {
+  // Only send pin parameters for interfaces that use custom pins
+  if(interfaceType === "sw" || interfaceType === "hw") {
     const rxPin = document.getElementById("rxPin").value;
     const txPin = document.getElementById("txPin").value;
     if (rxPin === txPin) {
-      alert("RX and TX pins cannot be the same for SoftwareSerial.");
+      alert("RX and TX pins cannot be the same.");
       return;  // Stop further execution if pins are the same
     }
     url += "&rx=" + rxPin + "&tx=" + txPin;
   }
+  // For USB serial, we don't need to send pin parameters
 
   xhttp.open("GET", url, true);
   xhttp.send();
@@ -256,8 +354,8 @@ char html_template[] PROGMEM = R"=====(
       <div class="me-2">
         <label for="interface">Serial Type:</label><br/>
         <select id="interface" name="interface" onchange="changeBaudAndPins()">
-          <option value="hw" selected>Hardware Serial</option>
-          <option value="sw">SoftwareSerial</option>
+          <option value="usb" selected>USB Serial</option>
+          <option value="hw">Hardware Serial</option>
         </select>
       </div>
 
@@ -272,7 +370,10 @@ char html_template[] PROGMEM = R"=====(
           <option value="28800">28800</option>
           <option value="38400">38400</option>
           <option value="57600">57600</option>
-          <option value="115200" selected>115200</option> <!-- Only one 115200 -->
+          <option value="115200" selected>115200</option>
+          <option value="230400">230400</option>
+          <option value="460800">460800</option>
+          <option value="921600">921600</option>
         </select>
       </div>
       
@@ -280,11 +381,7 @@ char html_template[] PROGMEM = R"=====(
       <div class="me-2">
         <label for="rxPin">RX Pin:</label><br/>
         <select class="me-2" onchange="changeBaudAndPins()" id="rxPin" name="rx">
-          <option value="5">D1 (GPIO5)</option>
-          <option value="4">D2 (GPIO4)</option>
-          <option value="14">D5 (GPIO14)</option>
-          <option value="12" selected>D6 (GPIO12)</option>
-          <option value="13">D7 (GPIO13)</option>
+          <!-- Options will be populated by JavaScript based on board type -->
         </select>
       </div>
 
@@ -292,14 +389,7 @@ char html_template[] PROGMEM = R"=====(
       <div class="me-2">
         <label for="txPin">TX Pin:</label><br/>
         <select class="me-2" onchange="changeBaudAndPins()" id="txPin" name="tx">
-          <option value="5">D1 (GPIO5)</option>
-          <option value="4">D2 (GPIO4)</option>
-          <option value="0">D3 (GPIO0)</option>
-          <option value="2">D4 (GPIO2)</option>
-          <option value="14" selected>D5 (GPIO14)</option>
-          <option value="12">D6 (GPIO12)</option>
-          <option value="13">D7 (GPIO13)</option>
-          <option value="15">D8 (GPIO15)</option>
+          <!-- Options will be populated by JavaScript based on board type -->
         </select>
       </div>
     </span>
