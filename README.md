@@ -23,10 +23,15 @@ Features:
   * Advertises the device as "MrDIY-Wireless-Serial.local" on the local network.
   * Simplifies access without needing to know the device's IP address.
 
+- Dual-Platform Support:
+  * Works on both ESP8266 (D1 Mini class) **and** ESP32-S3 (Seeed Xiao) using conditional compilation.
+  * USB-CDC, hardware UARTs, and SoftwareSerial handled automatically per platform.
+
 Requirements:
 -------------
 Hardware:
   - ESP8266-based board (e.g., Wemos D1 Mini).
+  - ESP32-S3 board (tested with Seeed Studio Xiao ESP32-S3).
   - Standard wiring for serial communication if needed.
 
 Software:
@@ -40,6 +45,7 @@ Software:
       • ArduinoOTA
       • SoftwareSerial
       • ESP8266mDNS
+      • (ESP32) WiFi / WebServer / ESPmDNS (comes with ESP32 Arduino core)
 
 Setup and Installation:
 -----------------------
@@ -53,7 +59,20 @@ Setup and Installation:
    - Select the appropriate board (e.g., "Wemos D1 Mini") and port in the IDE.
 
 4. Compile and Upload:
-   - Compile the code and upload it to your ESP8266 board.
+   - This project is now a **PlatformIO** workspace with multiple environments:
+
+     ```bash
+     # ESP32-S3 Xiao over USB-CDC
+     pio run -e esp32s3_serial -t upload
+
+     # ESP32-S3 Xiao OTA (after first flash & Wi-Fi configured)
+     pio run -e esp32s3_ota -t upload
+
+     # ESP8266 D1 Mini over UART
+     pio run -e esp8266_d1mini -t upload
+     ```
+
+     OTA for ESP8266 (`esp8266_d1mini_ota`) is provided but **not yet fully tested**.
 
 5. Network Setup:
    - Upon startup, the firmware attempts to connect to a configured Wi-Fi network.
@@ -97,6 +116,7 @@ Using the Web Interface:
        • RX Pin: Select the RX pin (default is D6/GPIO12 for SoftwareSerial).
        • TX Pin: Select the TX pin (default is D5/GPIO14 for SoftwareSerial).
    - The RX/TX dropdowns will be disabled (greyed out) when "Hardware Serial" is selected.
+   - On ESP32-S3 you will also see a **USB Serial** option which uses the native USB-CDC port.
    - Changing any dropdown values will automatically update the device settings.
 
 3. Interact with the Serial Device:
